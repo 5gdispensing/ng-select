@@ -90,5 +90,6 @@
     "standard-version": "^9.5.0",
     "ts-node": "~10.8.0",
     "typescript": "~4.7.2"
-  }
+  },
+  "main": "./dist/ng-select"
 }
