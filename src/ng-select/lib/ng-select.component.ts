@@ -107,11 +107,13 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     @Input() minTermLength = 0;
     @Input() editableSearchTerm = false;
     @Input() keyDownFn = (_: KeyboardEvent) => true;
+    @Input() searchable = true;
+    // Flag for using search input in dropdown panel. When true - it will hide default search input.
+    @Input() useSearchInPanel = false;
 
     @Input() @HostBinding('class.ng-select-typeahead') typeahead: Subject<string>;
     @Input() @HostBinding('class.ng-select-multiple') multiple = false;
     @Input() @HostBinding('class.ng-select-taggable') addTag: boolean | AddTagFn = false;
-    @Input() @HostBinding('class.ng-select-searchable') searchable = true;
     @Input() @HostBinding('class.ng-select-clearable') clearable = true;
     @Input() @HostBinding('class.ng-select-opened') isOpen = false;
 
@@ -176,6 +178,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     @ContentChild(NgTagTemplateDirective, { read: TemplateRef }) tagTemplate: TemplateRef<any>;
     @ContentChild(NgLoadingSpinnerTemplateDirective, { read: TemplateRef }) loadingSpinnerTemplate: TemplateRef<any>;
 
+    @ViewChild('headerSearchInput', {static: false}) headerSearchInput: ElementRef<HTMLInputElement>;
     @ViewChild(forwardRef(() => NgDropdownPanelComponent)) dropdownPanel: NgDropdownPanelComponent;
     @ViewChild('searchInput', { static: true }) searchInput: ElementRef<HTMLInputElement>;
     @ContentChildren(NgOptionComponent, { descendants: true }) ngOptions: QueryList<NgOptionComponent>;
@@ -187,6 +190,8 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     @HostBinding('class.ng-select-filtered') get filtered() { return (!!this.searchTerm && this.searchable || this._isComposing) };
 
     @HostBinding('class.ng-select-single') get single() { return !this.multiple };
+
+    @HostBinding('class.ng-select-searchable') get searchableNoPanel() { return !this.searchable && !this.useSearchInPanel };
 
     itemsList: ItemsList;
     viewPortItems: NgOption[] = [];
@@ -414,7 +419,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     }
 
     open() {
-        if (this.disabled || this.isOpen || this._manualOpen) {
+        if (this.disabled || this.isOpen || this._manualOpen || this.itemsList.maxItemsSelected) {
             return;
         }
 
@@ -425,7 +430,10 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         this.itemsList.markSelectedOrDefault(this.markFirst);
         this.openEvent.emit();
         if (!this.searchTerm) {
-            this.focus();
+            // wait for dropdown panel to render
+            setTimeout(() => {
+                this.focus();
+            }, 0);
         }
         this.detectChanges();
     }
@@ -438,7 +446,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         this._isComposing = false;
         if (!this._editableSearchTerm) {
             this._clearSearch();
-        } else {
+        } else if (this.clearSearchOnAdd) {
             this.itemsList.resetFilteredItems();
         }
         this.itemsList.unmarkItem();
@@ -484,11 +492,17 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     }
 
     focus() {
-        this.searchInput.nativeElement.focus();
+        const input = this.useSearchInPanel ? this.headerSearchInput : this.searchInput;
+        if (input) {
+            input.nativeElement.focus();
+        }
     }
 
     blur() {
-        this.searchInput.nativeElement.blur();
+        const input = this.useSearchInPanel ? this.headerSearchInput : this.searchInput;
+        if (input) {
+            input.nativeElement.blur();
+        }
     }
 
     unselect(item: NgOption) {
@@ -505,9 +519,9 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     selectTag() {
         let tag;
         if (isFunction(this.addTag)) {
-            tag = (<AddTagFn>this.addTag)(this.searchTerm);
+            tag = (this.addTag as AddTagFn)(this.searchTerm);
         } else {
-            tag = this._primitive ? this.searchTerm : { [this.bindLabel]: this.searchTerm };
+            tag = this._primitive ? this.searchTerm : {[this.bindLabel]: this.searchTerm};
         }
 
         const handleTag = (item) => this._isTypeahead || !this.isOpen ? this.itemsList.mapItem(item, null) : this.itemsList.addItem(item);
@@ -567,7 +581,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         this.filter(term);
     }
 
-    filter(term: string) {
+    filter(term: string, params?) {
         if (this._isComposing && !this.searchWhileComposing) {
             return;
         }
@@ -578,14 +592,16 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         }
 
         if (!this._isTypeahead) {
-            this.itemsList.filter(this.searchTerm);
-            if (this.isOpen) {
+            this.itemsList.filter(this.searchTerm, params);
+            if (this.isOpen && this.markFirst) {
                 this.itemsList.markSelectedOrDefault(this.markFirst);
             }
         }
 
-        this.searchEvent.emit({ term, items: this.itemsList.filteredItems.map(x => x.value) });
-        this.open();
+        if (!this.useSearchInPanel) {
+            this.searchEvent.emit({term, items: this.itemsList.filteredItems.map(x => x.value)});
+            this.open();
+        }
     }
 
     onInputFocus($event) {
@@ -622,14 +638,16 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     }
 
     detectChanges() {
-        if (!(<any>this._cd).destroyed) {
+        if (!(this._cd as any).destroyed) {
             this._cd.detectChanges();
         }
     }
 
     private _setSearchTermFromItems() {
-        const selected = this.selectedItems && this.selectedItems[0];
-        this.searchTerm = (selected && selected.label) || null;
+        // disable for now
+
+        // const selected = this.selectedItems && this.selectedItems[0];
+        // this.searchTerm = (selected && selected.label) || null;
     }
 
     private _setItems(items: any[]) {
@@ -734,7 +752,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         };
 
         if (this.multiple) {
-            (<any[]>ngModel).forEach(item => select(item));
+            (ngModel as any[]).forEach(item => select(item));
         } else {
             select(ngModel);
         }
@@ -767,7 +785,13 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
     }
 
     private _setInputAttributes() {
-        const input = this.searchInput.nativeElement;
+        const input = this.useSearchInPanel ? this.headerSearchInput : this.searchInput;
+
+        if (!input) {
+            // try again later
+            return;
+        }
+
         const attributes = {
             type: 'text',
             autocorrect: 'off',
@@ -777,18 +801,18 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         };
 
         for (const key of Object.keys(attributes)) {
-            input.setAttribute(key, attributes[key]);
+            input.nativeElement.setAttribute(key, attributes[key]);
         }
     }
 
     private _updateNgModel() {
         const model = [];
-        for (const item of this.selectedItems) {
+        for(const item of this.selectedItems) {
             if (this.bindValue) {
                 let value = null;
                 if (item.children) {
-                    const groupKey = this.groupValue ? this.bindValue : <string>this.groupBy;
-                    value = item.value[groupKey || <string>this.groupBy];
+                    const groupKey = this.groupValue ? this.bindValue : this.groupBy as string;
+                    value = item.value[groupKey || this.groupBy as string];
                 } else {
                     value = this.itemsList.resolveNested(item.value, this.bindValue);
                 }

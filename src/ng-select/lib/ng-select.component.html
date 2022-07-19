@@ -2,6 +2,7 @@
     (mousedown)="handleMousedown($event)"
     [class.ng-appearance-outline]="appearance === 'outline'"
     [class.ng-has-value]="hasValue"
+    [ngClass]="{'ng-use-search-input': !useSearchInPanel}"
     class="ng-select-container">
 
     <div class="ng-value-container">
@@ -27,9 +28,9 @@
         </ng-template>
 
         <div class="ng-input"
-            role="combobox" 
-            [attr.aria-expanded]="isOpen" 
-            [attr.aria-owns]="isOpen ? dropdownId : null" 
+            role="combobox"
+            [attr.aria-expanded]="isOpen"
+            [attr.aria-owns]="isOpen ? dropdownId : null"
             aria-haspopup="listbox">
 
             <input #searchInput
@@ -75,6 +76,7 @@
                    [bufferAmount]="bufferAmount"
                    [appendTo]="appendTo"
                    [position]="dropdownPosition"
+                   [headerSearchTemplate]="useSearchInPanel ? headerSearchTemplate : null"
                    [headerTemplate]="headerTemplate"
                    [footerTemplate]="footerTemplate"
                    [filterValue]="searchTerm"
@@ -89,6 +91,28 @@
                    [id]="dropdownId"
                    role="listbox"
                    aria-label="Options list">
+
+    <ng-template #headerSearchTemplate>
+        <div class="ng-select-dropdown-search m-n">
+            <input #headerSearchInput
+                   class="form-control search-input"
+                   [attr.id]="labelForId"
+                   [attr.tabindex]="tabIndex"
+                   [readOnly]="!searchable || itemsList.maxItemsSelected"
+                   [disabled]="disabled"
+                   [value]="searchTerm ? searchTerm : ''"
+                   (input)="filter(headerSearchInput.value)"
+                   (compositionstart)="onCompositionStart()"
+                   (compositionend)="onCompositionEnd(headerSearchInput.value)"
+                   (focus)="onInputFocus($event)"
+                   (blur)="onInputBlur($event)"
+                   (change)="$event.stopPropagation()"
+                   [attr.aria-activedescendant]="isOpen ? itemsList?.markedItem?.htmlId : null"
+                   aria-autocomplete="list"
+                   placeholder="Search"
+                   [attr.aria-controls]="isOpen ? dropdownId : null">
+        </div>
+    </ng-template>
 
     <ng-container>
         <div class="ng-option" [attr.role]="item.children ? 'group' : 'option'" (click)="toggleItem(item)" (mouseover)="onItemHover(item)"

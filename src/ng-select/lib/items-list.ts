@@ -49,6 +49,17 @@ export class ItemsList {
         return this._ngSelect.multiple && this._ngSelect.maxSelectedItems <= this.selectedItems.length;
     }
 
+    get firstSelectedItem() {
+        let i = 0;
+        for (; i < this.selectedItems.length; i++) {
+            const item = this.selectedItems[i];
+            if (!item.disabled) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     get lastSelectedItem() {
         let i = this.selectedItems.length - 1;
         for (; i >= 0; i--) {
@@ -69,7 +80,7 @@ export class ItemsList {
             this._groups = new Map();
             this._groups.set(undefined, this._items)
         }
-        this._filteredItems = [...this._items];
+        this.filter(null, {skipExpanding: true});
     }
 
     select(item: NgOption) {
@@ -136,8 +147,14 @@ export class ItemsList {
         });
     }
 
-    filter(term: string): void {
-        if (!term) {
+    /**
+     * Filter item list using search function.
+     *
+     * @param term - keyword to use in searching.
+     * @param [params] - custom params to pass to search function
+     */
+    filter(term: string, params?): void{
+        if (!term && !this._ngSelect.searchFn) {
             this.resetFilteredItems();
             return;
         }
@@ -154,7 +171,7 @@ export class ItemsList {
                     continue;
                 }
                 const searchItem = this._ngSelect.searchFn ? item.value : item;
-                if (match(term, searchItem)) {
+                if (match(term, searchItem, params)) {
                     matchedItems.push(item);
                 }
             }
@@ -202,9 +219,9 @@ export class ItemsList {
             return;
         }
 
-        const lastMarkedIndex = this._getLastMarkedIndex();
-        if (lastMarkedIndex > -1) {
-            this._markedIndex = lastMarkedIndex;
+        const markedIndex = this._getFirstMarkedIndex();
+        if (markedIndex > -1) {
+            this._markedIndex = markedIndex;
         } else {
             this._markedIndex = markDefault ? this.filteredItems.findIndex(x => !x.disabled) : -1;
         }
@@ -305,6 +322,26 @@ export class ItemsList {
         if (this.markedItem.disabled) {
             this._stepToItem(steps);
         }
+    }
+
+    private _getFirstMarkedIndex() { // hideValueProp: string) {
+        if (this._ngSelect.hideSelected) {
+            return -1;
+        }
+
+        if (this._markedIndex > -1 && this.markedItem === undefined) {
+            return -1;
+        }
+
+        // filter out hidden items, and found there index of a selected item
+        // const selectedIndex = _.filter(this._filteredItems, item => !item.value[hideValueProp]).indexOf(this.firstSelectedItem);
+        const selectedIndex = this._filteredItems.indexOf(this.firstSelectedItem);
+
+        if (this.firstSelectedItem && selectedIndex < 0) {
+            return -1;
+        }
+
+        return Math.max(this.markedIndex, selectedIndex);
     }
 
     private _getLastMarkedIndex() {

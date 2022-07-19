@@ -4,6 +4,8 @@ import {
     Component,
     ElementRef,
     EventEmitter,
+    HostBinding,
+    HostListener,
     Inject,
     Input,
     NgZone,
@@ -20,6 +22,7 @@ import {
 } from '@angular/core';
 import { animationFrameScheduler, asapScheduler, fromEvent, merge, Subject } from 'rxjs';
 import { auditTime, takeUntil } from 'rxjs/operators';
+import * as _ from 'lodash';
 import { NgDropdownPanelService, PanelDimensions } from './ng-dropdown-panel.service';
 
 import { DropdownPosition } from './ng-select.types';
@@ -34,8 +37,9 @@ const SCROLL_SCHEDULER = typeof requestAnimationFrame !== 'undefined' ? animatio
     encapsulation: ViewEncapsulation.None,
     selector: 'ng-dropdown-panel',
     template: `
-        <div *ngIf="headerTemplate" class="ng-dropdown-header">
+        <div *ngIf="headerTemplate || headerSearchTemplate" class="ng-dropdown-header">
             <ng-container [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ searchTerm: filterValue }"></ng-container>
+            <ng-container [ngTemplateOutlet]="headerSearchTemplate"></ng-container>
         </div>
         <div #scroll class="ng-dropdown-panel-items scroll-host">
             <div #padding [class.total-padding]="virtualScroll"></div>
@@ -56,6 +60,7 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
     @Input() appendTo: string;
     @Input() bufferAmount;
     @Input() virtualScroll = false;
+    @Input() headerSearchTemplate: TemplateRef<any>;
     @Input() headerTemplate: TemplateRef<any>;
     @Input() footerTemplate: TemplateRef<any>;
     @Input() filterValue: string = null;
@@ -112,10 +117,27 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
     private get _startOffset() {
         if (this.markedItem) {
             const { itemHeight, panelHeight } = this._panelService.dimensions;
-            const offset = this.markedItem.index * itemHeight;
+            const visibleIndex = _.indexOf(this.items, this.markedItem);
+            const offset = visibleIndex * itemHeight;
             return panelHeight > offset ? 0 : offset;
         }
         return 0;
+    }
+
+    // calculate panel width depends on items labels lengths
+    @HostBinding('style.width')
+    get panelWidth(): string{
+        const maxLabel = _.max(_.map(this.items, i => _.size(i.label)));
+        return `${50 + maxLabel * 9}px !important`;
+    }
+
+    @HostListener('mousedown', ['$event'])
+    handleMousedown($event: MouseEvent) {
+        const target = $event.target as HTMLElement;
+        if (target.tagName === 'INPUT') {
+            return;
+        }
+        $event.preventDefault();
     }
 
     ngOnInit() {
@@ -127,6 +149,8 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
         this._handleOutsideClick();
         this._appendDropdown();
         this._setupMousedownListener();
+        // scroll to first marked item on dropdown opening
+        this.scrollTo(this.markedItem);
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -162,7 +186,7 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
         } else {
             const item: HTMLElement = this._dropdown.querySelector(`#${option.htmlId}`);
             const lastScroll = startFromOption ? item.offsetTop : this._lastScrollPosition;
-            scrollTo = this._panelService.getScrollTo(item.offsetTop, item.clientHeight, lastScroll);
+            scrollTo = this._panelService.getScrollTo(item?.offsetTop || 0, item?.clientHeight || 36, lastScroll);
         }
 
         if (isDefined(scrollTo)) {
