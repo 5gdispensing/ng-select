@@ -1,7 +1,6 @@
 /.angular/cache
 node_modules
 coverage
-dist
 out-tsc
 .idea
 *.iml

@@ -7,11 +7,11 @@
     "npm": ">= 6.0.0"
   },
   "scripts": {
-    "build": "ng build ng-select && ng build ng-option-highlight && yarn build:themes && yarn copy-sass",
+    "build": "rimraf -r dist && ng build ng-select && ng build ng-option-highlight && yarn build:themes && yarn copy-sass",
     "build:demo": "ng build demo --configuration production --base-href=/ng-select && yarn copy-examples",
     "build:themes": "node-sass --output-style compressed src/ng-select/themes/ -o dist/ng-select/themes",
-    "copy-sass": "mkdir -p dist/ng-select/scss && cp src/ng-select/**/*.scss dist/ng-select/scss",
-    "copy-examples": "cp -r src/demo/app/examples dist/demo",
+    "copy-sass": "rimraf -r dist/ng-select/scss && copyfiles src/ng-select/**/*.scss dist/ng-select/scss",
+    "copy-examples": "copyfiles -r src/demo/app/examples dist/demo",
     "start": "ng serve",
     "test:watch": "ng test ng-select --watch",
     "test": "ng test ng-select --code-coverage && ng test ng-option-highlight --code-coverage",
@@ -70,6 +70,7 @@
     "@types/node": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "5.26.0",
     "@typescript-eslint/parser": "5.26.0",
+    "copyfiles": "2.4.x",
     "coveralls": "^3.1.1",
     "eslint": "8.16.0",
     "eslint-plugin-import": "^2.26.0",
