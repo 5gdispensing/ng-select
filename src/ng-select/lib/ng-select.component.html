@@ -2,7 +2,7 @@
     (mousedown)="handleMousedown($event)"
     [class.ng-appearance-outline]="appearance === 'outline'"
     [class.ng-has-value]="hasValue"
-    [ngClass]="{'ng-use-search-input': !useSearchInPanel}"
+    [class.ng-use-search-input]="!useSearchInPanel"
     class="ng-select-container">
 
     <div class="ng-value-container">
