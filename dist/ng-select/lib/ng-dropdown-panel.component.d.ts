@@ -18,6 +18,7 @@ export declare class NgDropdownPanelComponent implements OnInit, OnChanges, OnDe
     headerTemplate: TemplateRef<any>;
     footerTemplate: TemplateRef<any>;
     filterValue: string;
+    dynamicWidth: boolean;
     update: EventEmitter<any[]>;
     scroll: EventEmitter<{
         start: number;
@@ -74,5 +75,5 @@ export declare class NgDropdownPanelComponent implements OnInit, OnChanges, OnDe
     private _updateYPosition;
     private _setupMousedownListener;
     static ɵfac: i0.ɵɵFactoryDeclaration<NgDropdownPanelComponent, [null, null, null, null, { optional: true; }]>;
-    static ɵcmp: i0.ɵɵComponentDeclaration<NgDropdownPanelComponent, "ng-dropdown-panel", never, { "items": "items"; "markedItem": "markedItem"; "position": "position"; "appendTo": "appendTo"; "bufferAmount": "bufferAmount"; "virtualScroll": "virtualScroll"; "headerSearchTemplate": "headerSearchTemplate"; "headerTemplate": "headerTemplate"; "footerTemplate": "footerTemplate"; "filterValue": "filterValue"; }, { "update": "update"; "scroll": "scroll"; "scrollToEnd": "scrollToEnd"; "outsideClick": "outsideClick"; }, never, ["*"], false>;
+    static ɵcmp: i0.ɵɵComponentDeclaration<NgDropdownPanelComponent, "ng-dropdown-panel", never, { "items": "items"; "markedItem": "markedItem"; "position": "position"; "appendTo": "appendTo"; "bufferAmount": "bufferAmount"; "virtualScroll": "virtualScroll"; "headerSearchTemplate": "headerSearchTemplate"; "headerTemplate": "headerTemplate"; "footerTemplate": "footerTemplate"; "filterValue": "filterValue"; "dynamicWidth": "dynamicWidth"; }, { "update": "update"; "scroll": "scroll"; "scrollToEnd": "scrollToEnd"; "outsideClick": "outsideClick"; }, never, ["*"], false>;
 }
