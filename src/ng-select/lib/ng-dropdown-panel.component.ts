@@ -64,6 +64,7 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
     @Input() headerTemplate: TemplateRef<any>;
     @Input() footerTemplate: TemplateRef<any>;
     @Input() filterValue: string = null;
+    @Input() dynamicWidth = false;
 
     @Output() update = new EventEmitter<any[]>();
     @Output() scroll = new EventEmitter<{ start: number; end: number }>();
@@ -127,8 +128,12 @@ export class NgDropdownPanelComponent implements OnInit, OnChanges, OnDestroy {
     // calculate panel width depends on items labels lengths
     @HostBinding('style.width')
     get panelWidth(): string{
-        const maxLabel = _.max(_.map(this.items, i => _.size(i.label)));
-        return `${50 + maxLabel * 9}px !important`;
+        if(this.dynamicWidth){
+            const maxLabel = _.max(_.map(this.items, i => _.size(i.label)));
+            return `${50 + maxLabel * 9}px !important`;
+        }
+        // don't use dynamic width
+        return '';
     }
 
     @HostListener('mousedown', ['$event'])
