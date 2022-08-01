@@ -418,8 +418,8 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
         }
     }
 
-    open() {
-        if (this.disabled || this.isOpen || this._manualOpen || this.itemsList.maxItemsSelected) {
+    open(force = false) {
+        if (!force && (this.disabled || this.isOpen || this._manualOpen || this.itemsList.maxItemsSelected)) {
             return;
         }
 
@@ -436,6 +436,10 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
             }, 0);
         }
         this.detectChanges();
+        if(force){
+            // when opening was forced by the used - need to scroll to selected item
+            this._scrollToMarked();
+        }
     }
 
     close() {

@@ -149,7 +149,7 @@ export declare class NgSelectComponent implements OnDestroy, OnChanges, OnInit, 
     registerOnTouched(fn: any): void;
     setDisabledState(state: boolean): void;
     toggle(): void;
-    open(): void;
+    open(force?: boolean): void;
     close(): void;
     toggleItem(item: NgOption): void;
     select(item: NgOption): void;

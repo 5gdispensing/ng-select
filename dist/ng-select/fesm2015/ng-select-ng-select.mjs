@@ -2285,8 +2285,8 @@ class NgSelectComponent {
             this.close();
         }
     }
-    open() {
-        if (this.disabled || this.isOpen || this._manualOpen || this.itemsList.maxItemsSelected) {
+    open(force = false) {
+        if (!force && (this.disabled || this.isOpen || this._manualOpen || this.itemsList.maxItemsSelected)) {
             return;
         }
         if (!this._isTypeahead && !this.addTag && this.itemsList.noItemsToSelect) {
@@ -2302,6 +2302,10 @@ class NgSelectComponent {
             }, 0);
         }
         this.detectChanges();
+        if (force) {
+            // when opening was forced by the used - need to scroll to selected item
+            this._scrollToMarked();
+        }
     }
     close() {
         if (!this.isOpen || this._manualOpen) {
