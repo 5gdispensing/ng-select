@@ -2123,7 +2123,7 @@ class NgSelectComponent {
     ;
     get single() { return !this.multiple; }
     ;
-    get searchableNoPanel() { return !this.searchable && !this.useSearchInPanel; }
+    get searchableNoPanel() { return this.searchable && !this.useSearchInPanel; }
     ;
     get _editableSearchTerm() {
         return this.editableSearchTerm && !this.multiple;

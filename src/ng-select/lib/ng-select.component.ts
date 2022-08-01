@@ -191,7 +191,7 @@ export class NgSelectComponent implements OnDestroy, OnChanges, OnInit, AfterVie
 
     @HostBinding('class.ng-select-single') get single() { return !this.multiple };
 
-    @HostBinding('class.ng-select-searchable') get searchableNoPanel() { return !this.searchable && !this.useSearchInPanel };
+    @HostBinding('class.ng-select-searchable') get searchableNoPanel() { return this.searchable && !this.useSearchInPanel };
 
     itemsList: ItemsList;
     viewPortItems: NgOption[] = [];
