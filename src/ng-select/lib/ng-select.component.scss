@@ -302,3 +302,39 @@
         opacity: 0;
     }
 }
+
+.ng-select-inline{
+    .ng-select {
+        line-height: initial;
+
+        &.ng-select-multiple .ng-select-container {
+            .ng-value-container {
+                overflow: hidden;
+                flex-wrap: nowrap !important;
+
+                .ng-value {
+                    background: none;
+                    font-size: inherit;
+
+                    .ng-value-label {
+                        padding: 0;
+                    }
+
+                    .ng-value-icon {
+                        display: none;
+                    }
+                }
+
+                .ng-placeholder {
+                    position: initial !important;
+                    top: 0;
+                    padding: 0;
+                }
+            }
+
+            .ng-clear-wrapper {
+                display: none;
+            }
+        }
+    }
+}
